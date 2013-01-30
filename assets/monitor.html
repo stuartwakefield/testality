@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<div id="results"></div>
+<script>
+
+	var create = function(str) {
+		var wrapper = document.createElement("div");
+		wrapper.innerHTML = str;
+		return Array.prototype.slice.apply(wrapper.childNodes);
+	};
+	
+	var each = function(arr, fn) {
+		for(var i = 0; i < arr.length; ++i) {
+			fn(arr[i]);
+		}
+	};
+	
+	var onElementsWithClassName = function(context, className, fn) {
+		each(context.getElementsByClassName(className), fn);
+	};
+
+
+	var ws = new WebSocket("ws://localhost:9292");
+	var resultsElem = document.getElementById("results");
+	
+	var renderResults = function(data) {
+		var frag = document.createDocumentFragment();
+		
+		for(var ua in data) {
+		
+			var elem = create(
+				'<div class="ua">' +
+					'<div class="ua-name"></div>' +
+					'<div class="ua-results"></div>' +
+				'</div>'
+			)[0];
+		
+			onElementsWithClassName(elem, "ua-name", function(el) {
+				el.textContent = ua;
+			});
+			
+			var resultFrag = document.createDocumentFragment();
+		
+			for(var i = 0; i < data[ua].length; ++i) {
+				var resultElem = create(
+					'<div class="result">' +
+						'<span class="result-name"></span>: <strong class="result-pass"></strong>' +
+					'</div>'
+				)[0];
+				
+				onElementsWithClassName(resultElem, "result-name", function(el) {
+					el.textContent = data[ua][i].name;
+				});
+				
+				onElementsWithClassName(resultElem, "result-pass", function(el) {
+					el.textContent = data[ua][i].pass ? "PASS" : "FAIL";
+				});
+				
+				resultFrag.appendChild(resultElem);
+			}
+			
+			console.log(resultFrag);
+			
+			onElementsWithClassName(elem, "ua-results", function(el) {
+				el.appendChild(resultFrag);
+			});
+		
+			frag.appendChild(elem);
+		
+		}
+		resultsElem.innerHTML = "";
+		resultsElem.appendChild(frag);
+	}
+	
+	ws.onmessage = function(e) {
+		console.log("Received message: " + e.data);
+		renderResults(JSON.parse(e.data));
+	};
+	
+	ws.onclose = function() {
+		console.log("Socket closed!");
+	};
+	
+	ws.onopen = function() {
+		console.log("Connected");
+	};
+</script>

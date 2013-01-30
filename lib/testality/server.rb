@@ -1,105 +1,136 @@
 require "socket"
+require "./testality/request"
 
 module Testality
 	
 	class Server
 		
-		def initialize(port, resources)
+		def initialize(port, resources, listener)
 			@resources = resources
-			@lastupdate = nil
 			@port = port
+			@listener = listener
+			@results = {}
 		end
 		
 		def start
+			
+			puts "Server starting up on port #{@port}..."
+			
 			# Start up the server
-			server = TCPServer.new @port
+			server = TCPServer.new "0.0.0.0", @port
+			
+			puts "Server started"
+			
 			loop do
+				
+				puts "Server accepting clients..."
 				
 				# Don't block the server, allow multiple clients
 				Thread.fork(server.accept) do |client|
+					port, ip = Socket.unpack_sockaddr_in(client.getpeername)
+					puts ip
 					
-					# Get the request information
-					request = client.gets
+					puts "Client from IP " + ip + " accepted!"
 					
-					regexp = /^(\w+)\s(.+)\s(.+)$/
-					request_verb = request[regexp, 1].downcase
-					request_uri = request[regexp, 2]
-					request_protocol = request[regexp, 3]
+					request = Request.new client
 					
-					handle(client, request_verb, request_uri)
+					# Handle request
+					handle request
 				end
 			end
 		end
 		
-		def handle(client, verb, uri)
+		def update_after(time)
+			not @last == nil and @last > time
+		end
+		
+		def handle(request)
+			
 			# Send the tests to the client
-			if verb == "get" and uri == "/"
+			request.on "GET", "/" do |req|
 				
-				puts "The test client is requesting the test"
+				puts req
 				
-				# Create the response
-				response = "<!DOCTYPE html>" +
-					"<html>" +
-					"<head>" +
-					"<script src=\"http://code.jquery.com/jquery-1.9.0.min.js\"></script>" + 
-					"<script>#{@resources.get}</script>" +
-					"<script>(function() {" +
-						"var poll;" +
-						"(poll = function() {" + 
-							"$.ajax({" +
-								"url:\"/subscribe\"," +
-								"type: \"get\"," +
-								"dataType: \"json\"," +
-								"success: function(result) {" + 
-									"if(result.updates) {" + 
-										"window.location = \"/\";" +
-									"} else {" + 
-										"poll();" + 
-									"}" +
-								"}" +
-							"});" +
-						"})();" +
-					"})();</script>" +
-					"</head>" +
-					"</html>"
+				puts "Requesting the test harness..."
 					
-				respond client, "200 OK", "text/html", response
+				harness = File.open "../assets/harness.html", "r"
+					
+				respond req.get_socket, "200 OK", "text/html", harness.read
+				
+				puts "Test harness sent"
+				
 			end
 			
-			# We have a long-poll test subscriber
-			if verb == "get" and uri == "/subscribe"
+			request.on "GET", "/scripts/testality" do |req|
+				
+				puts "The test client is requesting the testality client script"
+					
+				script = File.open "../assets/testality.js", "r"
+				
+				respond request.get_socket, "200 OK", "text/javascript", script.read
+				
+			end
+				
+			request.on "GET", "/scripts/resource" do |req|
+				
+				puts "The test client is requesting the resource scripts"
+					
+				response = @resources.get
+				
+				respond request.get_socket, "200 OK", "text/javascript", response
+				
+			end
+					
+			request.on "GET", "/listen" do |req|
 				
 				puts "The test client is polling for updates"
-				
+					
 				timeout = Time.now + 30
 				time = Time.now
+				
 				begin 
 					sleep(0.1)
-					puts "Checking from: " << time.to_s
-					if @lastupdate != nil
-						puts "Last:" << @lastupdate.to_s
-					end
-				end while Time.now < timeout and @lastupdate == nil or @lastupdate < time
-				if @lastupdate > time
-					respond client, "200 OK", "application/json", "{\"updates\":true}"
+				end while Time.now < timeout and not update_after time
+				
+				puts "Sending response"
+				
+				if @last != nil and @last > time
+					puts "There were updated"
+					respond request.get_socket, "200 OK", "application/json", "{\"updates\":true}"
 				else
-					respond client, "200 OK", "application/json", "{\"updates\":false}"
+					puts "No updates"
+					respond request.get_socket, "200 OK", "application/json", "{\"updates\":false}"
 				end
+				
 			end
 			
-			# Receive the test results from the client
-			if verb == "post" and uri == "/"
-										
+			request.on "GET", "/monitor" do |req|
+				
+				puts "The monitoring client is requesting the interface"
+					
+				monitor = File.new "../assets/monitor.html", "r"
+				
+				respond request.get_socket, "200 OK", "text/html", monitor.read
+				
+			end
+			
+			request.on "POST", "/" do |req|
+				
 				puts "The test client has posted results"
+					
+				@results[req.get_headers["User-Agent"]] = req.get_body
+				
+				@listener.update @results
 				
 				# Our test is responding
-				respond client, "200 OK", "application/json", "{\"success\":true}"
+				respond request.get_socket, "200 OK", "application/json", "{\"success\":true}"
+				
 			end
 			
 		end
 		
 		def update
-			@lastupdate = Time.now
+			@last = Time.now
 		end
 		
 		def respond(client, status)
@@ -117,8 +148,6 @@ module Testality
 					"Content-Length: #{content.length.to_s()}\r\n" +
 					"\r\n#{content}"
 			end
-			
-			puts response
 			
 			client.puts response
 			

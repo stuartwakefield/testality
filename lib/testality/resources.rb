@@ -13,7 +13,7 @@ module Testality
 				file = File.open filename, "r"
 				contents += file.read + "\r\n"
 			end
-			contents.gsub(/\s+/, " ")
+			contents
 		end
 		
 		def hash
