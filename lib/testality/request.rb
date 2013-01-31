@@ -16,6 +16,31 @@ module Testality
 			regexp = /^(\w+)\s(.+)\s(.+)$/
 			@verb = request[regexp, 1]
 			@uri = request[regexp, 2]
+			split = @uri.index("?")
+			
+			@path = @uri
+			@querystring = ""
+			@get = {}
+			
+			if split != nil
+				
+				if split == 1
+					@path = @uri[0]
+				else
+					@path = @uri[0..(split - 1)]
+				end
+				
+				@querystring = @uri[(split + 1)..(@uri.length - 1)]
+				
+				# Will not handle params without a value
+				@querystring.lines("&") do |line|
+					index = line.index("=")
+					param = line[0..(index - 1)]
+					value = line[(index + 1)..(line.length - 1)]
+					@get[param] = value
+				end
+				
+			end
 			# protocol = request[regexp, 3]
 
 			# Parse headers
@@ -62,8 +87,8 @@ module Testality
 			@headers
 		end
 				
-		def on(verb, uri)
-			if @verb == verb and @uri == uri
+		def on(verb, path)
+			if @verb == verb and @path == path
 				yield(self)
 			end
 		end

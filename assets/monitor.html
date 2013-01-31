@@ -1,4 +1,39 @@
 <!DOCTYPE html>
+<style>
+	body {
+		font: 14px / 1.8 "Consolas", Arial, Tahoma, sans-serif;
+	}	
+	strong {
+		font: 14px / 1.8 Helvetica, Arial, Tahoma, sans-serif;
+	}
+	.ua-name {
+		font-size: 1.5em;
+		line-height: 1.8em;
+	}
+	.result {
+		margin: 10px 0;
+	}
+	.result-pass {
+		display: inline-block;
+		width: 50px;
+		padding: 2px;
+		text-align: center;
+	}
+	.result-pass-ok {
+		background: #060;
+		color: #cfc;
+	}
+	.result-pass-fail {
+		background: #600;
+		color: #fcc;
+	}
+	.result-message {
+		color: #933;
+	}
+	.result-stack {
+		color: #c99;
+	}
+</style>
 <div id="results"></div>
 <script>
 
@@ -17,6 +52,24 @@
 	var onElementsWithClassName = function(context, className, fn) {
 		each(context.getElementsByClassName(className), fn);
 	};
+	
+	var getUA = function(ua) {
+		
+		var matches;
+		
+		if(matches = ua.match(/MSIE ((\d+)\.\d+)/)) {
+			if(+matches[2] > 5)
+				return {name: "IE" + matches[2], type: "MSIE", version: matches[1], ua: ua};
+			else
+				return {name: "IE" + matches[1], type: "MSIE", version: matches[1], ua: ua};
+		} else if(matches = ua.match(/Chrome\/([\d\.]+)/)) {
+			return {name: "Chrome", type: "Webkit", version: matches[1], ua: ua};
+		} else if(matches = ua.match(/Firefox\/([\d\.]+)/)) {
+			return {name: "Firefox", type: "Gecko", version: matches[1], ua: ua};
+		}
+		
+		return {name: ua, type: "Unknown", version: "Unknown", ua: ua};
+	}
 
 
 	var ws = new WebSocket("ws://localhost:9292");
@@ -27,6 +80,8 @@
 		
 		for(var ua in data) {
 		
+			var realUA = getUA(ua);
+		
 			var elem = create(
 				'<div class="ua">' +
 					'<div class="ua-name"></div>' +
@@ -35,7 +90,8 @@
 			)[0];
 		
 			onElementsWithClassName(elem, "ua-name", function(el) {
-				el.textContent = ua;
+				el.textContent = realUA.name;
+				el.title = realUA.ua;
 			});
 			
 			var resultFrag = document.createDocumentFragment();
@@ -44,6 +100,8 @@
 				var resultElem = create(
 					'<div class="result">' +
 						'<span class="result-name"></span>: <strong class="result-pass"></strong>' +
+						(data[ua][i].message ? ' <em class="result-message"></em>' : '') +
+						(data[ua][i].stack ? ' <pre class="result-stack"></pre>' : '') +
 					'</div>'
 				)[0];
 				
@@ -52,9 +110,18 @@
 				});
 				
 				onElementsWithClassName(resultElem, "result-pass", function(el) {
-					el.textContent = data[ua][i].pass ? "PASS" : "FAIL";
+					el.textContent = data[ua][i].pass ? "OK" : "FAIL";
+					el.setAttribute("class", [el.getAttribute("class"), data[ua][i].pass ? "result-pass-ok" : "result-pass-fail"].join(" "));
 				});
 				
+				onElementsWithClassName(resultElem, "result-message", function(el) {
+					el.textContent = data[ua][i].message;
+				});
+				
+				onElementsWithClassName(resultElem, "result-stack", function(el) {
+					el.textContent = data[ua][i].stack;
+				});
+
 				resultFrag.appendChild(resultElem);
 			}
 			
@@ -72,15 +139,15 @@
 	}
 	
 	ws.onmessage = function(e) {
-		console.log("Received message: " + e.data);
+	//	console.log("Received message: " + e.data);
 		renderResults(JSON.parse(e.data));
 	};
 	
-	ws.onclose = function() {
-		console.log("Socket closed!");
-	};
+//	ws.onclose = function() {
+	//	console.log("Socket closed!");
+//	};
 	
-	ws.onopen = function() {
-		console.log("Connected");
-	};
+//	ws.onopen = function() {
+	//	console.log("Connected");
+//	};
 </script>

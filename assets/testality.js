@@ -22,7 +22,7 @@ var testality = (function() {
 			} else if(data == null) {
 				res = "null";
 				
-			} else if(typeof data === "object" && object instanceof Array) {
+			} else if(typeof data === "object" && data instanceof Array) {
 				var arr = [];
 				for(var i = 0; i < data.length; ++i)
 					arr.push(json.stringify(data[i]));
@@ -47,10 +47,11 @@ var testality = (function() {
 		
 	};
 	
-	var updated = function() {
-		if(this.readyState === 4) {
-			if(this.status === 200) {
-				callback(json.parse(this.responseText));
+	var updated = function(xhr, callback) {
+		
+		if(xhr.readyState === 4) {
+			if(xhr.status === 200) {
+				callback(json.parse(xhr.responseText));
 			} else {
 				throw new Error("Request failed!");
 			}
@@ -60,9 +61,7 @@ var testality = (function() {
 	var send = function(verb, url, data, callback) {
 		
 		var xhr;
-		
-		
-		
+				
 		if(window.XMLHttpRequest) {
 			xhr = new XMLHttpRequest();
 		} else if(window.ActiveXObject) {
@@ -81,11 +80,13 @@ var testality = (function() {
 		}
 		
 		
-		xhr.onreadystatechange = updated;
 		
-		xhr.open(verb.toUpperCase(), url, true);
-		xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+		xhr.onreadystatechange = function() {
+			updated(xhr, callback);
+		};
 		
+		xhr.open(verb.toUpperCase(), url + "?t=" + new Date().getTime(), true);
+		xhr.setRequestHeader("Content-Type", "application/json");
 		xhr.send(json.stringify(data));
 		
 	};
@@ -93,10 +94,11 @@ var testality = (function() {
 	var poll;
 	
 	var receiveStat = function(response) {
-		if(response.updates)
-			window.location = "/";
-		else
+		if(response.updates) {
+			window.location = "/?t=" + new Date().getTime();
+		} else {
 			poll();
+		}
 	};
 	
 	(poll = function() {

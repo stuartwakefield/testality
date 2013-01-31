@@ -28,7 +28,6 @@ module Testality
 				# Don't block the server, allow multiple clients
 				Thread.fork(server.accept) do |client|
 					port, ip = Socket.unpack_sockaddr_in(client.getpeername)
-					puts ip
 					
 					puts "Client from IP " + ip + " accepted!"
 					
@@ -48,8 +47,6 @@ module Testality
 			
 			# Send the tests to the client
 			request.on "GET", "/" do |req|
-				
-				puts req
 				
 				puts "Requesting the test harness..."
 					
@@ -95,7 +92,7 @@ module Testality
 				puts "Sending response"
 				
 				if @last != nil and @last > time
-					puts "There were updated"
+					puts "There were updates"
 					respond request.get_socket, "200 OK", "application/json", "{\"updates\":true}"
 				else
 					puts "No updates"
@@ -131,6 +128,7 @@ module Testality
 		
 		def update
 			@last = Time.now
+			@results = {}
 		end
 		
 		def respond(client, status)
