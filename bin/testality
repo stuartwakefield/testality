@@ -1,0 +1,31 @@
+#!/usr/env ruby
+
+$:.unshift "../lib/"
+
+require "testality"
+
+map = {:port => 9191, :mport => 9292, :srcs => []}
+command = nil
+ARGV.each do |arg|
+	puts arg
+	if arg.index("-p") != nil
+		command = :port
+	elsif arg.index("-m") != nil
+		command = :mport
+	else
+		if command == nil
+			map[:srcs].concat(arg.split(","))
+		else
+			map[command] = arg
+			command = nil
+		end
+	end
+end
+
+if map[:srcs].length == 0
+	map[:srcs].push(Dir.pwd)
+end
+
+puts map
+
+testality = Testality::Serve.new map[:port], map[:mport], map[:srcs]

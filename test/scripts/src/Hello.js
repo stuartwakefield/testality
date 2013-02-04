@@ -1,7 +1,7 @@
 function Hello() {
 	
 	this.sayHello = function() {
-		return "Hello";
+		return "Hi";
 	};
 	
 	this.sayGoodbye = function() {

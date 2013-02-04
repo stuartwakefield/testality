@@ -1,5 +1,5 @@
 require "socket"
-require "./testality/request"
+require "testality/request"
 
 module Testality
 	

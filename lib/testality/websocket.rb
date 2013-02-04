@@ -5,14 +5,15 @@ module Testality
 	
 	class WebSocket
 		
-		def initialize
+		def initialize(port)
+			@port = port
 			@clients = []
 			@results = {}
 		end
 		
 		def start
 			
-			EventMachine::WebSocket.start(:host => "0.0.0.0", :port => 9292) do |ws|
+			EventMachine::WebSocket.start(:host => "0.0.0.0", :port => @port) do |ws|
 				
 				ws.onopen do 
 					puts "New WebSocket client!"

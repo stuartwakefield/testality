@@ -79,8 +79,6 @@ var testality = (function() {
 			throw new Error("Cannot create XMLHttpRequest");
 		}
 		
-		
-		
 		xhr.onreadystatechange = function() {
 			updated(xhr, callback);
 		};

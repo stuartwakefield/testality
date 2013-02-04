@@ -10,5 +10,6 @@ Gem::Specification.new do |gem|
 	gem.authors = ["Stuart Wakefield"]
 	gem.email = ["me@stuartwakefield.co.uk"]
 	gem.files = Dir["lib/**/*.rb"]
+	gem.executables = ["testality"]
 	gem.homepage = "http://stuartwakefield.co.uk/testality"
 end
