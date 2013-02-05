@@ -1,7 +1,5 @@
 #!/usr/env ruby
 
-$:.unshift "../lib/"
-
 require "testality"
 
 map = {:port => 9191, :mport => 9292, :srcs => []}
@@ -14,7 +12,9 @@ ARGV.each do |arg|
 		command = :mport
 	else
 		if command == nil
-			map[:srcs].concat(arg.split(","))
+			arg.split(",").each do |src|
+				map[:srcs].push(File.expand_path(src, Dir.pwd))
+			end
 		else
 			map[command] = arg
 			command = nil

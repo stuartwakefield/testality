@@ -9,7 +9,7 @@ Gem::Specification.new do |gem|
 	gem.description = "Browser script test aggregation server"
 	gem.authors = ["Stuart Wakefield"]
 	gem.email = ["me@stuartwakefield.co.uk"]
-	gem.files = Dir["lib/**/*.rb"]
+	gem.files = Dir["lib/**/*.rb","lib/testality/assets/**/*"]
 	gem.executables = ["testality"]
 	gem.homepage = "http://stuartwakefield.co.uk/testality"
 end

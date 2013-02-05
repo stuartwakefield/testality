@@ -3,11 +3,7 @@ module Testality
 	class Resources
 		
 		def initialize(array)
-			@array = []
-			array.each do |dir|
-				@array.push(dir + "/**/*.js")
-			end
-			
+			@array = array
 		end
 		
 		def get

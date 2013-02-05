@@ -49,8 +49,10 @@ module Testality
 			request.on "GET", "/" do |req|
 				
 				puts "Requesting the test harness..."
+				
+				puts File.expand_path("assets/harness.html", File.dirname(__FILE__))
 					
-				harness = File.open "../assets/harness.html", "r"
+				harness = File.open(File.expand_path("assets/harness.html", File.dirname(__FILE__)), "r")
 					
 				respond req.get_socket, "200 OK", "text/html", harness.read
 				
@@ -62,7 +64,7 @@ module Testality
 				
 				puts "The test client is requesting the testality client script"
 					
-				script = File.open "../assets/testality.js", "r"
+				script = File.open(File.expand_path("assets/testality.js", File.dirname(__FILE__)), "r")
 				
 				respond request.get_socket, "200 OK", "text/javascript", script.read
 				
@@ -105,7 +107,7 @@ module Testality
 				
 				puts "The monitoring client is requesting the interface"
 					
-				monitor = File.new "../assets/monitor.html", "r"
+				monitor = File.open(File.expand_path("assets/summary.html", File.dirname(__FILE__)), "r")
 				
 				respond request.get_socket, "200 OK", "text/html", monitor.read
 				

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<style>
+			body {
+				background: #111;
+				font: 12px / 1.8 Helvetica, Arial, sans-serif;
+				color: #ccc;
+			}
+			#summary {
+				background: #666;
+				border-radius: 10px;
+				font-size: 4em;
+				text-align: center;
+				background-size: 20px 20px;
+				background-image: -webkit-linear-gradient(-45deg, 
+					rgba(255,255,255,0.1) 25%,
+					transparent 25%,
+					transparent 50%,
+					rgba(255,255,255,0.1) 50%,
+					rgba(255,255,255,0.1) 75%,
+					transparent 75%);
+				padding: 20px;
+				margin: 40px auto;
+				width: 50%;
+			}
+			#summary.summary-pass,
+			#summary-passes li {
+				background-color: #0C0;
+				color: #6f6;
+			}
+			#summary.summary-fail,
+			#summary-fails li {
+				background-color: #f30;
+				color: #610;
+			}
+			#summary-lists::before {
+				content: "";
+				display: block;
+				width: 50%;
+				height: 0;
+				border-top: 1px solid #000;
+				border-bottom: 1px solid #222;
+				margin: 0 auto;
+			}
+			#summary-lists {
+				width: 75%;
+				margin: 0 auto;
+			}
+			#summary-lists ul {
+				list-style: none;
+				margin: 0;
+				padding: 0;
+				text-align: center;
+			}
+			#summary-lists li {
+				display: inline-block;
+				width: 250px;
+				border-radius: 10px;
+				background-size: 20px 20px;
+				background-image: -webkit-linear-gradient(-45deg, 
+					rgba(255,255,255,0.1) 25%,
+					transparent 25%,
+					transparent 50%,
+					rgba(255,255,255,0.1) 50%,
+					rgba(255,255,255,0.1) 75%,
+					transparent 75%);
+				margin: 20px 10px 0;
+				padding: 10px;
+			}
+			#summary-lists h4 {
+				font-size: 2em;
+				margin: 0;
+			}
+			#summary-lists div {
+				font-size: 2em;
+			}
+		</style>
+		<script>
+		
+			var each = function(arr, fn) {
+				for(var i = 0; i < arr.length; ++i) {
+					fn(arr[i]);
+				}
+			};
+		
+			var dom = {
+				
+				ready: function(fn) {
+					document.addEventListener("DOMContentLoaded", fn, false);
+				},
+				
+				elemsWithId: function(id, fn) {
+					var elem = document.getElementById(id);
+					var arr = [];
+					if(elem) {
+						arr.push(elem);
+					}
+					each(arr, fn);
+				},
+				
+				elemsWithClass: function(className, fn, context) {
+					each((context || document).getElementsByClassName(className), fn);
+				},
+				
+				elems: function(tagName, fn, context) {
+					each((context || document).getElementsByTagName(tagName), fn);
+				}
+				
+			};
+			
+			var getSummary = function(results) {
+				
+				var map = {};
+				
+				for(var i = 0; i < results.length; ++i) {
+					for(var j = 0; j < results[i].tests.length; ++j) {
+						var test = results[i].tests[j];
+						
+						if(map[test.name] !== false) {
+							map[test.name] = test.pass
+						}
+					}
+				}
+				
+				var tests = [];
+				
+				for(var x in map) {
+					tests.push({
+						name: x,
+						pass: map[x]
+					});
+				}
+				
+				return tests;				
+			};
+			
+			var countPassesAndFails = function(results) {
+				
+				var passes = 0;
+				var fails = 0;
+				
+				for(var i = 0; i < results.length; ++i) {
+					if(results[i].pass) {
+						++passes;
+					} else {
+						++fails;
+					}
+				}
+				
+				return {passes: passes, fails: fails};
+			};
+			
+			var filter = function(results, fn) {
+				
+				var filtered = [];
+				
+				for(var i = 0; i < results.length; ++i) {
+					if(fn(results[i])) {
+						filtered.push(results[i]);	
+					}
+				}
+				
+				return filtered;
+			};
+			
+			var renderResults = function(results) {
+				var summary = getSummary(results);
+				
+				var fails = countPassesAndFails(summary).fails;
+				
+				dom.elemsWithId("summary", function(el) {
+					el.setAttribute("class", fails ? "summary-fail" : "summary-pass");
+					var text = "OK";
+					if(fails) {
+						text = "FAIL " + fails + " test" + (fails === 1 ? "" : "s");
+					}
+					el.textContent = text;
+					document.title = text;
+				});
+				
+				var failingTests = filter(results, function(result) {
+					return countPassesAndFails(result.tests).fails > 0;
+				});
+				
+				var passingTests = filter(results, function(result) {
+					return countPassesAndFails(result.tests).fails === 0;
+				});
+				
+				console.log(failingTests, passingTests);
+				
+				dom.elemsWithId("summary-fails", function(el) {
+					var frag = document.createDocumentFragment();
+					each(failingTests, function(test) {
+						var li = document.createElement("li");
+						var header = document.createElement("h4");
+						var div = document.createElement("div");
+						var fails = countPassesAndFails(test.tests).fails;
+						header.textContent = test.browser;
+						div.textContent = "FAIL " + fails + " test" + (fails === 1 ? "" : "s");
+						li.appendChild(header);
+						li.appendChild(div);
+						frag.appendChild(li);
+					});
+					el.innerHTML = "";
+					el.appendChild(frag);
+				});
+				
+				dom.elemsWithId("summary-passes", function(el) {
+					var frag = document.createDocumentFragment();
+					each(passingTests, function(test) {
+						var li = document.createElement("li");
+						var header = document.createElement("h4");
+						var div = document.createElement("div");
+						header.textContent = test.browser;
+						div.textContent = "OK";
+						li.appendChild(header);
+						li.appendChild(div);
+						frag.appendChild(li);
+					});
+					el.innerHTML = "";
+					el.appendChild(frag);
+				});
+			};
+			
+			var getUA = function(ua) {
+		
+				var matches;
+				
+				if(matches = ua.match(/MSIE ((\d+)\.\d+)/)) {
+					if(+matches[2] > 5)
+						return {name: "IE" + matches[2], type: "MSIE", version: matches[1], ua: ua};
+					else
+						return {name: "IE" + matches[1], type: "MSIE", version: matches[1], ua: ua};
+				} else if(matches = ua.match(/Chrome\/([\d\.]+)/)) {
+					return {name: "Chrome", type: "Webkit", version: matches[1], ua: ua};
+				} else if(matches = ua.match(/Firefox\/([\d\.]+)/)) {
+					return {name: "Firefox", type: "Gecko", version: matches[1], ua: ua};
+				}
+				
+				return {name: ua, type: "Unknown", version: "Unknown", ua: ua};
+			};
+						
+			var ws = new WebSocket("ws://localhost:9292");
+			ws.onmessage = function(e) {
+				var data = JSON.parse(e.data);
+				var results = [];
+				for(var x in data) {
+					results.push({
+						browser: getUA(x).name,
+						tests: data[x]
+					});
+				}
+				renderResults(results);
+			};
+		</script>
+	</head>
+	<body>
+		
+		<div id="summary"></div>
+		
+		<div id="summary-lists">
+			<ul id="summary-fails"></ul>
+			<ul id="summary-passes"></ul>
+		</div>
+		
+	</body>
+</html>
