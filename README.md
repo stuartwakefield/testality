@@ -53,7 +53,7 @@ Explore integration with:
 
 # Expansion
 
-## Front-end design testing
+## Visual testing memos
 
 Hash the current fileset, when the browser is refreshed it reports this hash
 to the test platform. When a new hash is created all the browsers that have
@@ -61,3 +61,10 @@ been connected are reported as stale. When they are refreshed to test this
 is then flagged green.
 
 ## Server-side cross-platform testing
+
+This would allow live compilation and running of server side source code and
+tests for local development. It would be kept separate from the code 
+repository, this is the domain of CI tools. The build step might be costly in
+terms of time for each modification, it might involve dynamic interpretation 
+of typically compiled files, otherwise developers will need to keep their builds 
+small and efficient. Needless to say this is a separate project on its own.
