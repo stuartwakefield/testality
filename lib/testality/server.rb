@@ -43,6 +43,14 @@ module Testality
 			not @last == nil and @last > time
 		end
 		
+		def expand_path(path)
+			File.expand_path("assets/harness.html", File.dirname(__FILE__))
+		end
+		
+		def read_file(path)
+			File.open(File.expand_path(path, File.dirname(__FILE__)), "r").read
+		end
+		
 		def handle(request)
 			
 			# Send the tests to the client
@@ -50,11 +58,11 @@ module Testality
 				
 				puts "Requesting the test harness..."
 				
-				puts File.expand_path("assets/harness.html", File.dirname(__FILE__))
-					
-				harness = File.open(File.expand_path("assets/harness.html", File.dirname(__FILE__)), "r")
-					
-				respond req.get_socket, "200 OK", "text/html", harness.read
+				resource = "assets/harness.html"
+				
+				puts expand_path(resource)
+	
+				respond req.get_socket, "200 OK", "text/html", read_file(resource)
 				
 				puts "Test harness sent"
 				
@@ -63,10 +71,8 @@ module Testality
 			request.on "GET", "/scripts/testality" do |req|
 				
 				puts "The test client is requesting the testality client script"
-					
-				script = File.open(File.expand_path("assets/testality.js", File.dirname(__FILE__)), "r")
-				
-				respond request.get_socket, "200 OK", "text/javascript", script.read
+
+				respond request.get_socket, "200 OK", "text/javascript", read_file("assets/testality.js")
 				
 			end
 				
@@ -106,10 +112,8 @@ module Testality
 			request.on "GET", "/monitor" do |req|
 				
 				puts "The monitoring client is requesting the interface"
-					
-				monitor = File.open(File.expand_path("assets/summary.html", File.dirname(__FILE__)), "r")
-				
-				respond request.get_socket, "200 OK", "text/html", monitor.read
+
+				respond request.get_socket, "200 OK", "text/html", read_file("assets/summary.html")
 				
 			end
 			
