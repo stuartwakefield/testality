@@ -30,33 +30,44 @@ module Testality
 			regexp = /^(\w+)\s(.+)\s(.+)$/
 			req[:verb] = str[regexp, 1]
 			req[:uri] = str[regexp, 2]
-			split = req[:uri].index("?")
-			
-			req[:path] = req[:uri]
-			req[:querystring] = ""
-			req[:get] = {}
-			
-			if split != nil
-				
-				if split == 1
-					req[:path] = req[:uri][0]
-				else
-					req[:path] = req[:uri][0..(split - 1)]
-				end
-				
-				req[:querystring] = req[:uri][(split + 1)..(req[:uri].length - 1)]
-				
-				# Will not handle params without a value
-				req[:querystring].lines("&") do |line|
-					index = line.index("=")
-					param = line[0..(index - 1)]
-					value = line[(index + 1)..(line.length - 1)]
-					req[:get][param] = value
-				end
-				
-			end
+			req[:path] = parse_path(req[:uri])	
+			req[:querystring] = parse_querystring(req[:uri])
+			req[:get] = parse_querystring_params(req[:querystring])
 			# protocol = request[regexp, 3]
 			return req
+		end
+		
+		def parse_path(uri)
+			path = uri
+			split = uri.index("?")
+			if split != nil
+				if split == 1
+					path = uri[0]
+				else
+					path = uri[0..(split - 1)]
+				end
+			end
+			return path
+		end
+		
+		def parse_querystring(uri)
+			qs = ""
+			if uri.index("?") != nil				
+				qs = uri[(split + 1)..(uri.length - 1)]
+			end
+			return qs
+		end
+		
+		def parse_querystring_params(querystring)	
+			map = {}
+			querystring.lines("&") do |line|
+				# Will not handle params without a value
+				index = line.index("=")
+				param = line[0..(index - 1)]
+				value = line[(index + 1)..(line.length - 1)]
+				map[param] = value
+			end
+			return map
 		end
 		
 		def parse_headers(socket)
