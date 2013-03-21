@@ -1,6 +1,6 @@
 module Testality
 	class Headers
-		def initialize(name)
+		def initialize()
 			get_default_name do
 
 			end
