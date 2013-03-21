@@ -7,13 +7,13 @@ module Testality
 		end
 		
 		def get
-			dir = Dir.glob(@array, 0)
-			contents = "";
+			dir = Dir.glob @array, 0
+			contents = []
 			dir.each do |filename|
 				file = File.open filename, "r"
-				contents += file.read + "\r\n"
+				contents << file.read
 			end
-			contents
+			contents.join "\r\n"
 		end
 		
 		def hash
