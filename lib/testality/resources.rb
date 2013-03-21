@@ -10,7 +10,9 @@ module Testality
 			dir = Dir.glob @array, 0
 			contents = []
 			dir.each do |filename|
-				contents << (File.open filename, "r").read
+				if File.file? filename
+					contents << (File.open filename, "r").read
+				end
 			end
 			contents.join "\r\n"
 		end

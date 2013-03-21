@@ -94,7 +94,8 @@ module Testality
 		
 		def handle_results(request)
 			puts "The test client has posted results"		
-			@results[request.get_headers["User-Agent"]] = req.get_body	
+			@results[request.get_headers["User-Agent"]] = request.get_body	
+			puts @results
 			@listener.update @results	
 			# Our test is responding
 			respond request.get_socket, "200 OK", "application/json", "{\"success\":true}"

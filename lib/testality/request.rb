@@ -5,18 +5,27 @@ module Testality
 	class Request
 		
 		def initialize(socket)
-			
+
+			puts "New request"
+		
 			@socket = socket
-			
-			@request = parse_request(socket)
+		
+			puts "Parsing request"
+
+			@request = parse_request @socket
+
+			puts "Parsing headers"
 
 			# Parse headers
-			@headers = parse_headers(socket)
+			@headers = parse_headers @socket
 			
+			puts "Parsing body"
+
 			# Parse body
-			@body = parse_body(headers, socket)
-			
-			
+			@body = parse_body @headers, @socket
+
+			puts "Parsed"
+
 		end
 		
 		def parse_request(socket)
@@ -52,7 +61,8 @@ module Testality
 		
 		def parse_querystring(uri)
 			qs = ""
-			if uri.index("?") != nil				
+			split = uri.index("?")
+			if split != nil				
 				qs = uri[(split + 1)..(uri.length - 1)]
 			end
 			return qs
@@ -60,7 +70,13 @@ module Testality
 		
 		def parse_querystring_params(querystring)	
 			map = {}
+
+			puts querystring
+
 			querystring.lines("&") do |line|
+				
+				puts "Parsing parameter pair"
+
 				# Will not handle params without a value
 				index = line.index("=")
 				param = line[0..(index - 1)]
@@ -95,6 +111,7 @@ module Testality
 				
 				# The response is json
 				if headers["Content-Type"].index("application/json") != nil
+					puts "Parsing json"
 					body = JSON.parse(body)
 				end
 			end
