@@ -1,3 +1,0 @@
-require "testality"
-
-Testality.hi
