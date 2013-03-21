@@ -8,42 +8,69 @@ module Testality
 			
 			@socket = socket
 			
-			# Get the request information (parse HTTP, perhaps there is a library
-			# that exists to do this already...)
-			request = socket.gets
-			request.strip!
-			
-			regexp = /^(\w+)\s(.+)\s(.+)$/
-			@verb = request[regexp, 1]
-			@uri = request[regexp, 2]
-			split = @uri.index("?")
-			
-			@path = @uri
-			@querystring = ""
-			@get = {}
-			
-			if split != nil
-				
-				if split == 1
-					@path = @uri[0]
-				else
-					@path = @uri[0..(split - 1)]
-				end
-				
-				@querystring = @uri[(split + 1)..(@uri.length - 1)]
-				
-				# Will not handle params without a value
-				@querystring.lines("&") do |line|
-					index = line.index("=")
-					param = line[0..(index - 1)]
-					value = line[(index + 1)..(line.length - 1)]
-					@get[param] = value
-				end
-				
-			end
-			# protocol = request[regexp, 3]
+			@request = parse_request(socket)
 
 			# Parse headers
+			@headers = parse_headers(socket)
+			
+			# Parse body
+			@body = parse_body(headers, socket)
+			
+			
+		end
+		
+		def parse_request(socket)
+			# Get the request information (parse HTTP, perhaps there is a library
+			# that exists to do this already...)
+			str = socket.gets
+			str.strip!
+			
+			req = {}
+			
+			regexp = /^(\w+)\s(.+)\s(.+)$/
+			req[:verb] = str[regexp, 1]
+			req[:uri] = str[regexp, 2]
+			req[:path] = parse_path(req[:uri])	
+			req[:querystring] = parse_querystring(req[:uri])
+			req[:get] = parse_querystring_params(req[:querystring])
+			# protocol = request[regexp, 3]
+			return req
+		end
+		
+		def parse_path(uri)
+			path = uri
+			split = uri.index("?")
+			if split != nil
+				if split == 1
+					path = uri[0]
+				else
+					path = uri[0..(split - 1)]
+				end
+			end
+			return path
+		end
+		
+		def parse_querystring(uri)
+			qs = ""
+			if uri.index("?") != nil				
+				qs = uri[(split + 1)..(uri.length - 1)]
+			end
+			return qs
+		end
+		
+		def parse_querystring_params(querystring)	
+			map = {}
+			querystring.lines("&") do |line|
+				# Will not handle params without a value
+				index = line.index("=")
+				param = line[0..(index - 1)]
+				value = line[(index + 1)..(line.length - 1)]
+				map[param] = value
+			end
+			return map
+		end
+		
+		def parse_headers(socket)
 			headers = {}
 			loop do 
 				line = socket.gets
@@ -57,10 +84,11 @@ module Testality
 				value.strip!
 				headers[param] = value
 			end
-			@headers = headers
-			
-			# Parse body
-			@body = nil
+			return headers
+		end
+		
+		def parse_body(headers, socket)
+			body = nil
 			if headers["Content-Length"]
 				length = Integer(headers["Content-Length"])
 				body = socket.read length
@@ -69,10 +97,8 @@ module Testality
 				if headers["Content-Type"].index("application/json") != nil
 					body = JSON.parse(body)
 				end
-				
-				@body = body
 			end
-			
+			return body
 		end
 		
 		def has_body
@@ -88,7 +114,7 @@ module Testality
 		end
 				
 		def on(verb, path)
-			if @verb == verb and @path == path
+			if @request[:verb] == verb and @request[:path] == path
 				yield(self)
 			end
 		end

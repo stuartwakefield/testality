@@ -43,87 +43,88 @@ module Testality
 			not @last == nil and @last > time
 		end
 		
+		def expand_path(path)
+			File.expand_path("assets/harness.html", File.dirname(__FILE__))
+		end
+		
+		def read_file(path)
+			File.open(File.expand_path(path, File.dirname(__FILE__)), "r").read
+		end
+		
+		def handle_main(request)
+			puts "Requesting the test harness..."	
+			resource = "assets/harness.html"	
+			puts expand_path(resource)
+			respond request.get_socket, "200 OK", "text/html", read_file(resource)	
+			puts "Test harness sent"
+		end
+		
+		def handle_test_harness(request) 
+			puts "The test client is requesting the testality client script"
+			respond request.get_socket, "200 OK", "text/javascript", read_file("assets/testality.js")	
+		end
+		
+		def handle_test_source(request)
+			puts "The test client is requesting the resource scripts"		
+			response = @resources.get	
+			respond request.get_socket, "200 OK", "text/javascript", response
+		end
+		
+		def handle_listen(request)
+			puts "The test client is polling for updates"
+			timeout = Time.now + 30
+			time = Time.now
+			begin 
+				sleep(0.1)
+			end while Time.now < timeout and not update_after time
+			puts "Sending response"
+			if @last != nil and @last > time
+				puts "There were updates"
+				respond request.get_socket, "200 OK", "application/json", "{\"updates\":true}"
+			else
+				puts "No updates"
+				respond request.get_socket, "200 OK", "application/json", "{\"updates\":false}"
+			end
+		end
+		
+		def handle_monitor(request)
+			puts "The monitoring client is requesting the interface"
+			respond request.get_socket, "200 OK", "text/html", read_file("assets/summary.html")	
+		end
+		
+		def handle_results(request)
+			puts "The test client has posted results"		
+			@results[request.get_headers["User-Agent"]] = req.get_body	
+			@listener.update @results	
+			# Our test is responding
+			respond request.get_socket, "200 OK", "application/json", "{\"success\":true}"
+		end
+		
 		def handle(request)
 			
 			# Send the tests to the client
 			request.on "GET", "/" do |req|
-				
-				puts "Requesting the test harness..."
-				
-				puts File.expand_path("assets/harness.html", File.dirname(__FILE__))
-					
-				harness = File.open(File.expand_path("assets/harness.html", File.dirname(__FILE__)), "r")
-					
-				respond req.get_socket, "200 OK", "text/html", harness.read
-				
-				puts "Test harness sent"
-				
+				handle_main req
 			end
 			
 			request.on "GET", "/scripts/testality" do |req|
-				
-				puts "The test client is requesting the testality client script"
-					
-				script = File.open(File.expand_path("assets/testality.js", File.dirname(__FILE__)), "r")
-				
-				respond request.get_socket, "200 OK", "text/javascript", script.read
-				
+				handle_test_harness req
 			end
 				
 			request.on "GET", "/scripts/resource" do |req|
-				
-				puts "The test client is requesting the resource scripts"
-					
-				response = @resources.get
-				
-				respond request.get_socket, "200 OK", "text/javascript", response
-				
+				handle_test_source req
 			end
 					
 			request.on "GET", "/listen" do |req|
-				
-				puts "The test client is polling for updates"
-					
-				timeout = Time.now + 30
-				time = Time.now
-				
-				begin 
-					sleep(0.1)
-				end while Time.now < timeout and not update_after time
-				
-				puts "Sending response"
-				
-				if @last != nil and @last > time
-					puts "There were updates"
-					respond request.get_socket, "200 OK", "application/json", "{\"updates\":true}"
-				else
-					puts "No updates"
-					respond request.get_socket, "200 OK", "application/json", "{\"updates\":false}"
-				end
-				
+				handle_listen req
 			end
 			
 			request.on "GET", "/monitor" do |req|
-				
-				puts "The monitoring client is requesting the interface"
-					
-				monitor = File.open(File.expand_path("assets/summary.html", File.dirname(__FILE__)), "r")
-				
-				respond request.get_socket, "200 OK", "text/html", monitor.read
-				
+				handle_monitor req
 			end
 			
 			request.on "POST", "/" do |req|
-				
-				puts "The test client has posted results"
-					
-				@results[req.get_headers["User-Agent"]] = req.get_body
-				
-				@listener.update @results
-				
-				# Our test is responding
-				respond request.get_socket, "200 OK", "application/json", "{\"success\":true}"
-				
+				handle_results req
 			end
 			
 		end
