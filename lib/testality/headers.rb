@@ -8,8 +8,5 @@ module Testality
 		def set_name
 			@name = yield
 		end
-		def name
-			@name
-		end
 	end
 end
