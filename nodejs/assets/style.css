@@ -1,0 +1,148 @@
+html, body { min-height: 100%; }
+body {
+	font: 0.75em / 1.5 "Calibri", Geneva, Helvetica, Arial, sans-serif;
+	background: #111;
+	color: #eee;
+	margin: 2em;
+}
+.resultSummary {
+	background: #9c3;
+	overflow: hidden;
+	display: block;
+	zoom: 1;
+	color: #111;
+	text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+	margin: 2em;
+	padding: 1em 0;
+}
+.failResult {
+	background: #f60;
+}
+.resultSummary dl {
+	width: 33%;
+	float: left;
+	margin: 0;
+}
+.resultSummary dt,
+.resultSummary dd {
+	width: 50%;
+	float: left;
+	margin: 0;
+}
+.resultSummary dt {
+	text-align: right;
+}
+.resultSummary dd {
+	font: 3em / 1.5 Georgia;
+	text-align: left;
+}
+.resultLogs {
+	float: left;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	width: 60%;
+}
+.resultLogs li li {
+	padding-left: 64px;
+	background: url("?asset=png&name=pass") left top no-repeat;
+	margin: 1em 0;
+}
+.resultLogs ul {
+	list-style: none;
+	padding: 0;
+	margin-left: 1em;
+}
+.resultLogs li .failLog {
+	color: #f60;
+	background-image: url("?asset=png&name=fail");
+}
+.resultLogs .message {
+	font-weight: bold;
+	font-size: 2em;
+	line-height: 1.5;
+}
+.resultLogs .testName {
+	font-style: italic;
+}
+.resultLogs .testMethod {
+	font-size: 1.5em;
+	line-height: 1;
+}
+.resultLogs .stack {
+	font-family: "Courier New", courier, monospace;
+}
+.resultTests {
+	float: right;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	width: 40%;
+	text-align: right;
+}
+.resultTests li {
+	position: relative;
+}
+.resultTests li a {
+	color: #9c3;
+}
+.resultTests .testResults {
+	background: #9c3;
+	color: #111;
+	padding: 1em;
+	width: 10em;
+	border: 0.5em solid #111;
+	position: absolute;
+	top: -1em;
+	z-index: 999;
+	visibility: hidden;
+	opacity: 0;
+	-webkit-transition: visibility 0s linear 0.2s, opacity 0.2s ease-in-out;
+	
+}
+.resultTests .testResults:after {
+	border: 1em solid transparent;
+	border-left-color: #9c3;
+	display: block;
+	overflow: hidden;
+	width: 0;
+	height: 0;
+	content: "";
+	position: absolute;
+	top: 0.5em;
+	right: -2em;
+}
+.resultTests .testResults:before {
+	border: 1.5em solid transparent;
+	border-left-color: #111;
+	display: block;
+	overflow: hidden;
+	width: 0;
+	height: 0;
+	content: "";
+	position: absolute;
+	top: 0em;
+	right: -3em;
+}
+.resultTests .failTest .testResults:after {
+	border-left-color: #f60;
+}
+.resultTests .failTest a {
+	color: #f60;
+}
+.resultTests .failTest .testResults {
+	background: #f60;
+}
+.resultTests .testResults dl {
+	margin: 0;
+	text-align: center;
+}
+.resultTests .testResults dd {
+	margin: 0 0 1em;
+	font: 2em / 1.5 Georgia;
+}
+.resultTests li:hover .testResults {
+	visibility: visible;
+	opacity: 1;
+	-webkit-transition-delay: 0s;
+}

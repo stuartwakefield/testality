@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="?asset=style&name=style"/>
+		<script type="text/javascript" src="?asset=script&name=jquery"></script>
+		<script type="text/javascript" src="?asset=script&name=assertion"></script>
+		<script type="text/javascript" src="?asset=script&name=tester"></script>
+		<script type="text/javascript" src="?asset=script&name=results"></script>
+		<script type="text/javascript" src="?action=test.assets"></script>
+		<script type="text/javascript">
+			tester.runTests();
+			// Run the tests that have added themselves
+			// to the test runner
+			
+			$(function() {
+				renderer.init();
+				// Initialize the rendering object
+				
+				renderer.render(tester.getResult());
+				// Render the result of the tests
+				
+			});
+		</script>
+	</head>
+	<body>
+		<div id="test-report">
+			<div>Last run at <span class="runat"></span></div>
+			<div class="resultSummary">
+				<dl class="summaryCount">
+					<dt>Tests run</dt>
+					<dd></dd>
+				</dl>
+				<dl class="summaryFailures">
+					<dt>Failures</dt>
+					<dd></dd>
+				</dl>
+				<dl class="summaryPasses">
+					<dt>Passes</dt>
+					<dd></dd>
+				</dl>
+			</div>
+			<ul class="resultLogs"></ul>
+			<ul class="resultTests"></ul>
+		</div>	
+	</body>
+</html>
