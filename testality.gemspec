@@ -12,4 +12,5 @@ Gem::Specification.new do |gem|
 	gem.files = Dir["lib/**/*.rb","lib/testality/assets/**/*"]
 	gem.executables = ["testality"]
 	gem.homepage = "http://stuartwakefield.co.uk/testality"
+	gem.add_dependency "em-websocket", "~> 0.5.0"
 end
